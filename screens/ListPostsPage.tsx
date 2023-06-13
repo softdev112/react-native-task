@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import axios from 'axios';
 
 interface Post {
@@ -15,6 +15,8 @@ interface ListPostsPageProps {
 
 const ListPostsPage = ({ navigation, refresh }: ListPostsPageProps) => {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchPosts();
@@ -24,7 +26,6 @@ const ListPostsPage = ({ navigation, refresh }: ListPostsPageProps) => {
     try {
       const response = await axios.get('https://jsonplaceholder.typicode.com/posts');
       setPosts(response.data);
-      console.log('response = ', response.data);
     } catch (error) {
       console.error('Error fetching posts:', error);
     }
@@ -32,6 +33,22 @@ const ListPostsPage = ({ navigation, refresh }: ListPostsPageProps) => {
 
   const handlePostPress = (post: Post) => {
     navigation.navigate('ViewPost', { post });
+  };
+
+  const handleSearch = (searchQuery: string) => {
+    if (!searchQuery) {
+      setSearchQuery('');
+      setFilteredPosts([]);
+
+      return;
+    }
+    setSearchQuery(searchQuery);
+    // Filter the posts based on the search query
+    const filteredPosts = posts.filter((post) =>
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.body.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredPosts(filteredPosts);
   };
 
   const renderPostItem = ({ item }: { item: Post }) => (
@@ -44,15 +61,29 @@ const ListPostsPage = ({ navigation, refresh }: ListPostsPageProps) => {
   );
 
   return (
-    <FlatList
-      data={posts}
-      renderItem={renderPostItem}
-      keyExtractor={(item) => item.id.toString()}
-    />
+    <View>
+      <TextInput
+        placeholder="Search"
+        value={searchQuery}
+        onChangeText={handleSearch}
+        style={styles.searchInput}
+      />
+      <FlatList
+        data={searchQuery === null || searchQuery === '' ? posts: filteredPosts}
+        renderItem={renderPostItem}
+        keyExtractor={(item) => item.id.toString()}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  searchInput: {
+    padding: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
   postContainer: {
     padding: 16,
   },
