@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 import axios from 'axios';
+import Modal from 'react-native-modal';
 
-const AddPostPage = ({ navigation }: { navigation: any }) => {
+interface AddPostPageProps {
+  navigation: any;
+  onPostAdded: () => void; // Callback function to notify the parent component (ListPostsPage)
+}
+
+const AddPostPage = ({ navigation, onPostAdded }: AddPostPageProps) => {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [isAlertVisible, setAlertVisible] = useState(false);
 
   const handleAddPost = async () => {
     if (!title || !body) {
-      alert('Title and body are required');
+      setAlertVisible(true);
       return;
     }
 
@@ -19,6 +26,7 @@ const AddPostPage = ({ navigation }: { navigation: any }) => {
         userId: 1,
       });
       console.log('New post:', response.data);
+      onPostAdded();
 
       setTitle('');
       setBody('');
@@ -30,28 +38,61 @@ const AddPostPage = ({ navigation }: { navigation: any }) => {
   };
 
   return (
-    <View style={{ padding: 16 }}>
-      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 8 }}>Add Post</Text>
+    <View style={styles.container}>
+      <Text style={styles.heading}>Add Post</Text>
       <TextInput
         placeholder="Title"
         value={title}
-        onChangeText={(text) => setTitle(text)}
-        style={{ marginBottom: 8 }}
+        onChangeText={setTitle}
+        style={styles.input}
       />
       <TextInput
         placeholder="Body"
         value={body}
-        onChangeText={(text) => setBody(text)}
+        onChangeText={setBody}
         multiline
-        style={{ marginBottom: 16, height: 100 }}
+        style={[styles.input, styles.textArea]}
       />
       <Button title="Add Post" onPress={handleAddPost} />
+
+      <Modal isVisible={isAlertVisible} backdropOpacity={0.5}>
+        <View style={styles.alertContainer}>
+          <Text style={styles.alertText}>Title and body are required</Text>
+          <Button title="OK" onPress={() => setAlertVisible(false)} />
+        </View>
+      </Modal>
     </View>
   );
 };
 
-export default AddPostPage;
-function alert(arg0: string) {
-    throw new Error('Function not implemented.');
-}
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  heading: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  input: {
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 4,
+    padding: 8,
+  },
+  textArea: {
+    height: 100,
+  },
+  alertContainer: {
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 8,
+  },
+  alertText: {
+    fontSize: 18,
+    marginBottom: 16,
+  },
+});
 
+export default AddPostPage;

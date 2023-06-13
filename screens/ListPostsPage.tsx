@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import axios from 'axios';
 
 interface Post {
@@ -8,21 +8,27 @@ interface Post {
   body: string;
 }
 
-const ListPostsPage = ({ navigation }: { navigation: any }) => {
+interface ListPostsPageProps {
+  navigation: any;
+  refresh: boolean;
+}
+
+const ListPostsPage = ({ navigation, refresh }: ListPostsPageProps) => {
   const [posts, setPosts] = useState<Post[]>([]);
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await axios.get('https://jsonplaceholder.typicode.com/posts');
-        setPosts(response.data);
-      } catch (error) {
-        console.error('Error fetching posts:', error);
-      }
-    };
-
     fetchPosts();
-  }, []);
+  }, [refresh]);
+
+  const fetchPosts = async () => {
+    try {
+      const response = await axios.get('https://jsonplaceholder.typicode.com/posts');
+      setPosts(response.data);
+      console.log('response = ', response.data);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    }
+  };
 
   const handlePostPress = (post: Post) => {
     navigation.navigate('ViewPost', { post });
@@ -30,9 +36,9 @@ const ListPostsPage = ({ navigation }: { navigation: any }) => {
 
   const renderPostItem = ({ item }: { item: Post }) => (
     <TouchableOpacity onPress={() => handlePostPress(item)}>
-      <View style={{ padding: 16 }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{item.title}</Text>
-        <Text style={{ marginTop: 8 }}>{item.body}</Text>
+      <View style={styles.postContainer}>
+        <Text style={styles.postTitle}>{item.title}</Text>
+        <Text style={styles.postBody}>{item.body}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -45,5 +51,18 @@ const ListPostsPage = ({ navigation }: { navigation: any }) => {
     />
   );
 };
+
+const styles = StyleSheet.create({
+  postContainer: {
+    padding: 16,
+  },
+  postTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  postBody: {
+    marginTop: 8,
+  },
+});
 
 export default ListPostsPage;
